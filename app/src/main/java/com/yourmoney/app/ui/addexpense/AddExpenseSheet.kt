@@ -22,13 +22,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.yourmoney.app.model.Category
-import com.yourmoney.app.ui.rememberViewModel
+import com.yourmoney.app.ui.rememberFactoryViewModel
 import com.yourmoney.app.ui.theme.DeepGreen
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddExpenseSheet(onDismiss: () -> Unit) {
-    val viewModel: AddExpenseViewModel = rememberViewModel()
+    val viewModel: AddExpenseViewModel = rememberFactoryViewModel { app -> AddExpenseViewModel(app.repository) }
     val sheetState = rememberModalBottomSheetState()
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {

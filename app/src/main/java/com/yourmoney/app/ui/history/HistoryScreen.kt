@@ -24,14 +24,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.yourmoney.app.ui.dashboard.ExpenseRow
-import com.yourmoney.app.ui.rememberViewModel
+import com.yourmoney.app.ui.rememberFactoryViewModel
 import com.yourmoney.app.ui.theme.BackgroundLight
 import com.yourmoney.app.ui.theme.DeepGreen
 import com.yourmoney.app.ui.theme.TextSecondary
 
 @Composable
 fun HistoryScreen() {
-    val viewModel: HistoryViewModel = rememberViewModel()
+    val viewModel: HistoryViewModel = rememberFactoryViewModel { app -> HistoryViewModel(app.repository) }
     val expenses by viewModel.expenses.collectAsState()
 
     Scaffold(containerColor = BackgroundLight) { padding ->

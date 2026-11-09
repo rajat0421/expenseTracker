@@ -19,8 +19,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.filled.Wallet
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -31,6 +35,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,7 +47,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yourmoney.app.model.Expense
 import com.yourmoney.app.model.paiseToRupees
-import com.yourmoney.app.ui.rememberViewModel
+import com.yourmoney.app.ui.rememberFactoryViewModel
+import com.yourmoney.app.ui.scan.ScanSheet
 import com.yourmoney.app.ui.theme.BackgroundLight
 import com.yourmoney.app.ui.theme.DeepGreen
 import com.yourmoney.app.ui.theme.ExpenseRed
@@ -52,9 +60,11 @@ fun formatRupees(amount: Double): String = "₹" + "%,.0f".format(amount)
 fun formatPaise(amountPaise: Long): String = formatRupees(amountPaise.paiseToRupees())
 
 @Composable
-fun DashboardScreen() {
-    val viewModel: DashboardViewModel = rememberViewModel()
+fun DashboardScreen(onNavigateToReview: () -> Unit = {}) {
+    val viewModel: DashboardViewModel =
+        rememberFactoryViewModel { app -> DashboardViewModel(app.repository, app.pendingExpenseRepository) }
     val uiState by viewModel.uiState.collectAsState()
+    var showScanSheet by remember { mutableStateOf(false) }
 
     Scaffold(containerColor = BackgroundLight) { padding ->
         LazyColumn(
@@ -66,6 +76,10 @@ fun DashboardScreen() {
         ) {
             item { DashboardHeader() }
             item { TotalSpentCard(uiState) }
+            item { ScanExpensesButton(onClick = { showScanSheet = true }) }
+            if (uiState.pendingReviewCount > 0) {
+                item { PendingReviewBanner(count = uiState.pendingReviewCount, onClick = onNavigateToReview) }
+            }
             item { QuickStatsRow(uiState) }
             if (uiState.categorySpends.isNotEmpty()) {
                 item { CategoryOverviewCard(uiState) }
@@ -76,6 +90,54 @@ fun DashboardScreen() {
             item { RecentTransactionsHeader() }
             items(uiState.recentExpenses) { expense -> ExpenseRow(expense) }
             item { Spacer(modifier = Modifier.height(80.dp)) }
+        }
+    }
+
+    if (showScanSheet) {
+        ScanSheet(onDismiss = { showScanSheet = false })
+    }
+}
+
+@Composable
+private fun ScanExpensesButton(onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = SoftGreen, contentColor = DeepGreen),
+    ) {
+        Icon(Icons.Filled.Search, contentDescription = null, modifier = Modifier.size(18.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        Text("Scan this month's expenses")
+    }
+}
+
+@Composable
+private fun PendingReviewBanner(count: Int, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        onClick = onClick,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Filled.NotificationsActive, contentDescription = null, tint = DeepGreen, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                "$count expense${if (count == 1) "" else "s"} awaiting review",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+            Text("Review", style = MaterialTheme.typography.bodyMedium, color = DeepGreen, fontWeight = FontWeight.Medium)
         }
     }
 }

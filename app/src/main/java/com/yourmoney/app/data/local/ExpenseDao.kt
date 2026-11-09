@@ -26,4 +26,7 @@ interface ExpenseDao {
 
     @Query("SELECT COUNT(*) FROM expenses")
     suspend fun count(): Int
+
+    @Query("SELECT * FROM expenses WHERE fingerprint = :fingerprint LIMIT 1")
+    suspend fun findByFingerprint(fingerprint: String): ExpenseEntity?
 }

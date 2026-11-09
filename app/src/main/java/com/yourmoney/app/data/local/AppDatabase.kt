@@ -6,11 +6,17 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
-@Database(entities = [ExpenseEntity::class], version = 1, exportSchema = false)
+@Database(
+    entities = [ExpenseEntity::class, PendingExpenseEntity::class, ScanHistoryEntity::class],
+    version = 2,
+    exportSchema = false,
+)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun expenseDao(): ExpenseDao
+    abstract fun pendingExpenseDao(): PendingExpenseDao
+    abstract fun scanHistoryDao(): ScanHistoryDao
 
     companion object {
         @Volatile
@@ -22,7 +28,10 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "yourmoney.db",
-                ).build().also { instance = it }
+                )
+                    .addMigrations(Migrations.MIGRATION_1_2)
+                    .build()
+                    .also { instance = it }
             }
     }
 }

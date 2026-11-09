@@ -1,29 +1,32 @@
 package com.yourmoney.app.ui
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import com.yourmoney.app.YourMoneyApplication
-import com.yourmoney.app.data.ExpenseRepository
 
-class ViewModelFactory(private val repository: ExpenseRepository) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return modelClass
-            .getConstructor(ExpenseRepository::class.java)
-            .newInstance(repository)
+@Composable
+fun yourMoneyApp(): YourMoneyApplication {
+    val context = LocalContext.current.applicationContext
+    return context as YourMoneyApplication
+}
+
+/**
+ * Builds a ViewModel from the current [YourMoneyApplication]'s singleton repositories,
+ * without reflection — each screen supplies its own constructor call, so a ViewModel can
+ * depend on any combination of repositories.
+ */
+@Composable
+inline fun <reified T : ViewModel> rememberFactoryViewModel(crossinline creator: (YourMoneyApplication) -> T): T {
+    val app = yourMoneyApp()
+    val factory = remember(app) {
+        object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <VM : ViewModel> create(modelClass: Class<VM>): VM = creator(app) as VM
+        }
     }
-}
-
-@Composable
-fun yourMoneyRepository(): ExpenseRepository {
-    val app = LocalContext.current.applicationContext as YourMoneyApplication
-    return app.repository
-}
-
-@Composable
-inline fun <reified T : ViewModel> rememberViewModel(): T {
-    val factory = ViewModelFactory(yourMoneyRepository())
     return viewModel(factory = factory)
 }

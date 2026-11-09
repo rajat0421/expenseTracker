@@ -2,8 +2,13 @@ package com.yourmoney.app.data.local
 
 import androidx.room.TypeConverter
 import com.yourmoney.app.model.Category
+import com.yourmoney.app.model.ConfidenceLevel
 import com.yourmoney.app.model.ExpenseSource
+import com.yourmoney.app.model.ReviewStatus
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 class Converters {
     @TypeConverter
@@ -11,6 +16,14 @@ class Converters {
 
     @TypeConverter
     fun toEpochDay(date: LocalDate?): Long? = date?.toEpochDay()
+
+    @TypeConverter
+    fun fromEpochMillisToDateTime(millis: Long?): LocalDateTime? =
+        millis?.let { LocalDateTime.ofInstant(Instant.ofEpochMilli(it), ZoneId.systemDefault()) }
+
+    @TypeConverter
+    fun toEpochMillisFromDateTime(dateTime: LocalDateTime?): Long? =
+        dateTime?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
 
     @TypeConverter
     fun fromCategoryName(name: String?): Category? = name?.let(Category::valueOf)
@@ -23,4 +36,16 @@ class Converters {
 
     @TypeConverter
     fun toSourceName(source: ExpenseSource?): String? = source?.name
+
+    @TypeConverter
+    fun fromConfidenceName(name: String?): ConfidenceLevel? = name?.let(ConfidenceLevel::valueOf)
+
+    @TypeConverter
+    fun toConfidenceName(confidence: ConfidenceLevel?): String? = confidence?.name
+
+    @TypeConverter
+    fun fromReviewStatusName(name: String?): ReviewStatus? = name?.let(ReviewStatus::valueOf)
+
+    @TypeConverter
+    fun toReviewStatusName(status: ReviewStatus?): String? = status?.name
 }

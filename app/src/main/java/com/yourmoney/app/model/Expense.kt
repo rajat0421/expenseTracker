@@ -14,6 +14,10 @@ data class Expense(
     val date: LocalDate,
     val note: String? = null,
     val source: ExpenseSource = ExpenseSource.MANUAL,
+    val accountRef: String? = null,
+    val transactionRef: String? = null,
+    val bankSender: String? = null,
+    val fingerprint: String? = null,
 )
 
 fun Long.paiseToRupees(): Double = this / 100.0

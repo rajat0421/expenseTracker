@@ -16,6 +16,10 @@ data class ExpenseEntity(
     val date: LocalDate,
     val note: String?,
     val source: ExpenseSource,
+    val accountRef: String? = null,
+    val transactionRef: String? = null,
+    val bankSender: String? = null,
+    val fingerprint: String? = null,
 )
 
 fun ExpenseEntity.toDomain() = Expense(
@@ -26,6 +30,10 @@ fun ExpenseEntity.toDomain() = Expense(
     date = date,
     note = note,
     source = source,
+    accountRef = accountRef,
+    transactionRef = transactionRef,
+    bankSender = bankSender,
+    fingerprint = fingerprint,
 )
 
 fun Expense.toEntity() = ExpenseEntity(
@@ -36,4 +44,8 @@ fun Expense.toEntity() = ExpenseEntity(
     date = date,
     note = note,
     source = source,
+    accountRef = accountRef,
+    transactionRef = transactionRef,
+    bankSender = bankSender,
+    fingerprint = fingerprint,
 )

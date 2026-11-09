@@ -1,0 +1,29 @@
+package com.yourmoney.app.data.sms
+
+import com.yourmoney.app.data.Categorizer
+import com.yourmoney.app.data.PendingExpenseRepository
+import com.yourmoney.app.model.Category
+import com.yourmoney.app.model.ExpenseSource
+
+/**
+ * The single place that turns a [ParseOutcome] into a pending-review row (or decides to
+ * ignore it). Shared by historical scanning and live SMS detection so both paths behave
+ * identically for categorization and deduplication.
+ */
+class CandidateProcessor(private val pendingExpenseRepository: PendingExpenseRepository) {
+
+    /** Returns true if a new pending candidate was created (false for ignored/duplicate). */
+    suspend fun process(outcome: ParseOutcome, source: ExpenseSource): Boolean {
+        val parsed = when (outcome) {
+            is ParseOutcome.Candidate -> outcome.parsed
+            is ParseOutcome.Transfer, ParseOutcome.NotTransaction -> return false
+        }
+
+        val fingerprint = FingerprintCalculator.compute(parsed)
+        if (pendingExpenseRepository.existsFingerprint(fingerprint)) return false
+
+        val category = Categorizer.suggestCategoryOrNull(parsed.merchant) ?: Category.UNCATEGORIZED
+        pendingExpenseRepository.addCandidate(parsed, category, fingerprint, source)
+        return true
+    }
+}

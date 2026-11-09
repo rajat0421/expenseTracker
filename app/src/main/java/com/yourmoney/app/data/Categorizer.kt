@@ -53,10 +53,12 @@ object Categorizer {
         "instamart" to Category.GROCERIES,
     )
 
-    fun suggestCategory(merchant: String): Category {
+    fun suggestCategory(merchant: String): Category = suggestCategoryOrNull(merchant) ?: Category.OTHER
+
+    /** Like [suggestCategory] but returns null instead of a fallback, for callers that need
+     * to distinguish "no match" (e.g. to mark as [Category.UNCATEGORIZED]) from a real guess. */
+    fun suggestCategoryOrNull(merchant: String): Category? {
         val normalized = merchant.lowercase()
-        return keywordMap.entries.firstOrNull { (keyword, _) -> normalized.contains(keyword) }
-            ?.value
-            ?: Category.OTHER
+        return keywordMap.entries.firstOrNull { (keyword, _) -> normalized.contains(keyword) }?.value
     }
 }

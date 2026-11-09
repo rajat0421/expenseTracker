@@ -14,6 +14,7 @@ data class DashboardUiState(
     val recentExpenses: List<Expense> = emptyList(),
     val categorySpends: List<CategorySpend> = emptyList(),
     val insights: List<String> = emptyList(),
+    val pendingReviewCount: Int = 0,
 )
 
 fun buildDashboardState(expenses: List<Expense>): DashboardUiState {
