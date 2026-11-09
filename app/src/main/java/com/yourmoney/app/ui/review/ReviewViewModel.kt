@@ -2,8 +2,9 @@ package com.yourmoney.app.ui.review
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yourmoney.app.data.CategoryRepository
 import com.yourmoney.app.data.PendingExpenseRepository
-import com.yourmoney.app.model.Category
+import com.yourmoney.app.data.local.CategoryEntity
 import com.yourmoney.app.model.PendingExpense
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,9 +14,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-class ReviewViewModel(private val repository: PendingExpenseRepository) : ViewModel() {
+class ReviewViewModel(
+    private val repository: PendingExpenseRepository,
+    categoryRepository: CategoryRepository,
+) : ViewModel() {
 
     val pending: StateFlow<List<PendingExpense>> = repository.observePending()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val categories: StateFlow<List<CategoryEntity>> = categoryRepository.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _selectedIds = MutableStateFlow<Set<Long>>(emptySet())
@@ -43,8 +50,8 @@ class ReviewViewModel(private val repository: PendingExpenseRepository) : ViewMo
         clearSelection()
     }
 
-    fun updateDraft(id: Long, merchant: String, category: Category, amountPaise: Long, transactionDate: LocalDate? = null) =
+    fun updateDraft(id: Long, merchant: String, categoryId: Long, amountPaise: Long, transactionDate: LocalDate? = null) =
         viewModelScope.launch {
-            repository.updateDraft(id, merchant, category, amountPaise, transactionDate)
+            repository.updateDraft(id, merchant, categoryId, amountPaise, transactionDate)
         }
 }

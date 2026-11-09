@@ -1,8 +1,8 @@
 package com.yourmoney.app.data.sms
 
 import com.yourmoney.app.data.Categorizer
+import com.yourmoney.app.data.CategoryRepository
 import com.yourmoney.app.data.PendingExpenseRepository
-import com.yourmoney.app.model.Category
 import com.yourmoney.app.model.ExpenseSource
 
 /**
@@ -10,7 +10,10 @@ import com.yourmoney.app.model.ExpenseSource
  * ignore it). Shared by historical scanning and live SMS detection so both paths behave
  * identically for categorization and deduplication.
  */
-class CandidateProcessor(private val pendingExpenseRepository: PendingExpenseRepository) {
+class CandidateProcessor(
+    private val pendingExpenseRepository: PendingExpenseRepository,
+    private val categoryRepository: CategoryRepository,
+) {
 
     /**
      * Returns true if a new pending candidate was created (false for ignored/duplicate).
@@ -26,8 +29,10 @@ class CandidateProcessor(private val pendingExpenseRepository: PendingExpenseRep
         val fingerprint = FingerprintCalculator.compute(parsed)
         if (pendingExpenseRepository.existsFingerprint(fingerprint)) return false
 
-        val category = Categorizer.suggestCategoryOrNull(parsed.merchant) ?: Category.UNCATEGORIZED
-        pendingExpenseRepository.addCandidate(parsed, category, fingerprint, source, originalSmsBody)
+        val key = Categorizer.suggestCategoryKey(parsed.merchant)
+        val categoryId = key?.let { categoryRepository.findByKey(it)?.id } ?: categoryRepository.uncategorizedId()
+
+        pendingExpenseRepository.addCandidate(parsed, categoryId, fingerprint, source, originalSmsBody)
         return true
     }
 }

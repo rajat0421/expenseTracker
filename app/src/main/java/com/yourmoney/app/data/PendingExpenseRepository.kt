@@ -6,7 +6,6 @@ import com.yourmoney.app.data.local.PendingExpenseEntity
 import com.yourmoney.app.data.local.toDomain
 import com.yourmoney.app.data.local.toEntity
 import com.yourmoney.app.data.sms.ParsedTransaction
-import com.yourmoney.app.model.Category
 import com.yourmoney.app.model.Expense
 import com.yourmoney.app.model.ExpenseSource
 import com.yourmoney.app.model.PendingExpense
@@ -34,7 +33,7 @@ class PendingExpenseRepository(
 
     suspend fun addCandidate(
         parsed: ParsedTransaction,
-        category: Category,
+        categoryId: Long,
         fingerprint: String,
         source: ExpenseSource,
         originalSmsBody: String?,
@@ -42,7 +41,7 @@ class PendingExpenseRepository(
         pendingDao.insert(
             PendingExpenseEntity(
                 merchant = parsed.merchant,
-                category = category,
+                categoryId = categoryId,
                 amountPaise = parsed.amountPaise,
                 transactionAt = parsed.transactionAt,
                 accountRef = parsed.accountRef,
@@ -62,13 +61,13 @@ class PendingExpenseRepository(
 
     /** Edits are only ever applied while the candidate is still PENDING, so the original
      * SMS body (if any) is left untouched here - it's only cleared by [approve]/[reject]. */
-    suspend fun updateDraft(id: Long, merchant: String, category: Category, amountPaise: Long, transactionDate: LocalDate? = null) {
+    suspend fun updateDraft(id: Long, merchant: String, categoryId: Long, amountPaise: Long, transactionDate: LocalDate? = null) {
         val existing = pendingDao.getById(id) ?: return
         val newTransactionAt = transactionDate?.let { existing.transactionAt.toLocalTime().atDate(it) } ?: existing.transactionAt
         pendingDao.update(
             existing.copy(
                 merchant = merchant,
-                category = category,
+                categoryId = categoryId,
                 amountPaise = amountPaise,
                 transactionAt = newTransactionAt,
             ),
@@ -88,7 +87,7 @@ class PendingExpenseRepository(
         expenseDao.insert(
             Expense(
                 merchant = existing.merchant,
-                category = existing.category,
+                categoryId = existing.categoryId,
                 amountPaise = existing.amountPaise,
                 date = existing.transactionAt.toLocalDate(),
                 source = existing.source,

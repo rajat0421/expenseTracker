@@ -2,7 +2,6 @@ package com.yourmoney.app.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.yourmoney.app.model.Category
 import com.yourmoney.app.model.ConfidenceLevel
 import com.yourmoney.app.model.ExpenseSource
 import com.yourmoney.app.model.PendingExpense
@@ -19,7 +18,7 @@ import java.time.LocalDateTime
 data class PendingExpenseEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val merchant: String,
-    val category: Category,
+    val categoryId: Long,
     val amountPaise: Long,
     val transactionAt: LocalDateTime,
     val accountRef: String?,
@@ -38,7 +37,7 @@ data class PendingExpenseEntity(
 fun PendingExpenseEntity.toDomain() = PendingExpense(
     id = id,
     merchant = merchant,
-    category = category,
+    categoryId = categoryId,
     amountPaise = amountPaise,
     transactionAt = transactionAt,
     accountRef = accountRef,

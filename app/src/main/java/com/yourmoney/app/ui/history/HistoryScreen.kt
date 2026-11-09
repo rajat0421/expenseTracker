@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,8 +32,11 @@ import com.yourmoney.app.ui.theme.TextSecondary
 
 @Composable
 fun HistoryScreen() {
-    val viewModel: HistoryViewModel = rememberFactoryViewModel { app -> HistoryViewModel(app.repository) }
+    val viewModel: HistoryViewModel =
+        rememberFactoryViewModel { app -> HistoryViewModel(app.repository, app.categoryRepository) }
     val expenses by viewModel.expenses.collectAsState()
+    val categories by viewModel.categories.collectAsState()
+    val categoriesById = remember(categories) { categories.associateBy { it.id } }
 
     Scaffold(containerColor = BackgroundLight) { padding ->
         LazyColumn(
@@ -74,7 +78,9 @@ fun HistoryScreen() {
                     )
                 }
             } else {
-                items(expenses) { expense -> ExpenseRow(expense) }
+                items(expenses) { expense ->
+                    ExpenseRow(expense, categoryName = categoriesById[expense.categoryId]?.name ?: "Uncategorized")
+                }
             }
 
             item { androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(bottom = 80.dp)) }

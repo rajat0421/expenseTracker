@@ -12,12 +12,6 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses ORDER BY date DESC, id DESC")
     fun observeAll(): Flow<List<ExpenseEntity>>
 
-    @Query(
-        "SELECT * FROM expenses WHERE merchant LIKE '%' || :query || '%' " +
-            "OR category LIKE '%' || :query || '%' ORDER BY date DESC, id DESC"
-    )
-    fun search(query: String): Flow<List<ExpenseEntity>>
-
     @Insert
     suspend fun insert(expense: ExpenseEntity): Long
 

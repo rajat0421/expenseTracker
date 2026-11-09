@@ -1,7 +1,6 @@
 package com.yourmoney.app.data.local
 
 import androidx.room.TypeConverter
-import com.yourmoney.app.model.Category
 import com.yourmoney.app.model.ConfidenceLevel
 import com.yourmoney.app.model.ExpenseSource
 import com.yourmoney.app.model.ReviewStatus
@@ -24,12 +23,6 @@ class Converters {
     @TypeConverter
     fun toEpochMillisFromDateTime(dateTime: LocalDateTime?): Long? =
         dateTime?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
-
-    @TypeConverter
-    fun fromCategoryName(name: String?): Category? = name?.let(Category::valueOf)
-
-    @TypeConverter
-    fun toCategoryName(category: Category?): String? = category?.name
 
     @TypeConverter
     fun fromSourceName(name: String?): ExpenseSource? = name?.let(ExpenseSource::valueOf)

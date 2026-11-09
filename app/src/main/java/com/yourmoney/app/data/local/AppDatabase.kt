@@ -7,8 +7,8 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
 @Database(
-    entities = [ExpenseEntity::class, PendingExpenseEntity::class, ScanHistoryEntity::class],
-    version = 3,
+    entities = [ExpenseEntity::class, PendingExpenseEntity::class, ScanHistoryEntity::class, CategoryEntity::class],
+    version = 4,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -17,6 +17,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun expenseDao(): ExpenseDao
     abstract fun pendingExpenseDao(): PendingExpenseDao
     abstract fun scanHistoryDao(): ScanHistoryDao
+    abstract fun categoryDao(): CategoryDao
 
     companion object {
         @Volatile
@@ -29,7 +30,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "yourmoney.db",
                 )
-                    .addMigrations(Migrations.MIGRATION_1_2, Migrations.MIGRATION_2_3)
+                    .addMigrations(Migrations.MIGRATION_1_2, Migrations.MIGRATION_2_3, Migrations.MIGRATION_3_4)
                     .build()
                     .also { instance = it }
             }

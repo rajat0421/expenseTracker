@@ -1,6 +1,7 @@
 package com.yourmoney.app
 
 import android.app.Application
+import com.yourmoney.app.data.CategoryRepository
 import com.yourmoney.app.data.ExpenseRepository
 import com.yourmoney.app.data.PendingExpenseRepository
 import com.yourmoney.app.data.ScanHistoryRepository
@@ -10,12 +11,20 @@ import com.yourmoney.app.data.sms.HistoricalScanner
 import com.yourmoney.app.data.sms.PendingExpenseNotifier
 import com.yourmoney.app.data.sms.SmsMessageReader
 import com.yourmoney.app.data.sms.TransactionParser
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class YourMoneyApplication : Application() {
+
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val database by lazy { AppDatabase.getInstance(this) }
 
     val repository: ExpenseRepository by lazy { ExpenseRepository(database.expenseDao()) }
+
+    val categoryRepository: CategoryRepository by lazy { CategoryRepository(database.categoryDao()) }
 
     val pendingExpenseRepository: PendingExpenseRepository by lazy {
         PendingExpenseRepository(database.pendingExpenseDao(), database.expenseDao())
@@ -25,7 +34,7 @@ class YourMoneyApplication : Application() {
 
     val transactionParser: TransactionParser by lazy { TransactionParser() }
 
-    val candidateProcessor: CandidateProcessor by lazy { CandidateProcessor(pendingExpenseRepository) }
+    val candidateProcessor: CandidateProcessor by lazy { CandidateProcessor(pendingExpenseRepository, categoryRepository) }
 
     val historicalScanner: HistoricalScanner by lazy {
         HistoricalScanner(
@@ -39,5 +48,8 @@ class YourMoneyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         PendingExpenseNotifier.ensureChannel(this)
+        applicationScope.launch {
+            categoryRepository.ensureSeeded()
+        }
     }
 }

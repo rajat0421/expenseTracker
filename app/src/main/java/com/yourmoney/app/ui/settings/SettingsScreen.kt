@@ -39,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -48,7 +49,7 @@ import com.yourmoney.app.ui.theme.ExpenseRed
 import com.yourmoney.app.ui.theme.TextSecondary
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(onManageCategories: () -> Unit = {}) {
     val context = LocalContext.current
     var readSmsGranted by remember { mutableStateOf(hasPermission(context, Manifest.permission.READ_SMS)) }
     var receiveSmsGranted by remember { mutableStateOf(hasPermission(context, Manifest.permission.RECEIVE_SMS)) }
@@ -72,6 +73,33 @@ fun SettingsScreen() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text("Settings", style = MaterialTheme.typography.headlineMedium)
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp)),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                onClick = onManageCategories,
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Manage Categories", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Rename existing categories or add your own.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextSecondary,
+                        )
+                    }
+                    Text("Edit", style = MaterialTheme.typography.bodyMedium, color = DeepGreen)
+                }
+            }
 
             PermissionStatusCard(
                 title = "SMS Access",

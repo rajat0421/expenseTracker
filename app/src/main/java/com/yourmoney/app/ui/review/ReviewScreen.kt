@@ -50,7 +50,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.yourmoney.app.model.Category
 import com.yourmoney.app.model.ConfidenceLevel
 import com.yourmoney.app.model.PendingExpense
 import com.yourmoney.app.model.paiseToRupees
@@ -68,8 +67,11 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun ReviewScreen() {
-    val viewModel: ReviewViewModel = rememberFactoryViewModel { app -> ReviewViewModel(app.pendingExpenseRepository) }
+    val viewModel: ReviewViewModel =
+        rememberFactoryViewModel { app -> ReviewViewModel(app.pendingExpenseRepository, app.categoryRepository) }
     val pending by viewModel.pending.collectAsState()
+    val categories by viewModel.categories.collectAsState()
+    val categoriesById = remember(categories) { categories.associateBy { it.id } }
     val selectedIds by viewModel.selectedIds.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -144,6 +146,7 @@ fun ReviewScreen() {
                     items(pending, key = { it.id }) { candidate ->
                         PendingExpenseCard(
                             candidate = candidate,
+                            categoryName = categoriesById[candidate.categoryId]?.name ?: "Uncategorized",
                             selected = candidate.id in selectedIds,
                             onToggleSelected = { viewModel.toggleSelected(candidate.id) },
                             onApprove = {
@@ -166,9 +169,10 @@ fun ReviewScreen() {
     editingCandidate?.let { candidate ->
         EditPendingExpenseSheet(
             candidate = candidate,
+            categories = categories,
             onDismiss = { editingCandidate = null },
-            onSave = { merchant, category, amountPaise, date ->
-                viewModel.updateDraft(candidate.id, merchant, category, amountPaise, date)
+            onSave = { merchant, categoryId, amountPaise, date ->
+                viewModel.updateDraft(candidate.id, merchant, categoryId, amountPaise, date)
                 editingCandidate = null
                 notify("Expense updated")
             },
@@ -219,6 +223,7 @@ private fun StatChip(label: String, color: androidx.compose.ui.graphics.Color, b
 @Composable
 private fun PendingExpenseCard(
     candidate: PendingExpense,
+    categoryName: String,
     selected: Boolean,
     onToggleSelected: () -> Unit,
     onApprove: () -> Unit,
@@ -277,7 +282,7 @@ private fun PendingExpenseCard(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Surface(shape = RoundedCornerShape(10.dp), color = SoftGreen) {
                     Text(
-                        candidate.category.displayName,
+                        categoryName,
                         style = MaterialTheme.typography.labelSmall,
                         color = DeepGreen,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),

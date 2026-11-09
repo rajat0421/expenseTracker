@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 data class PendingExpense(
     val id: Long = 0,
     val merchant: String,
-    val category: Category,
+    val categoryId: Long,
     val amountPaise: Long,
     val transactionAt: LocalDateTime,
     val accountRef: String? = null,

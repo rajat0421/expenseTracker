@@ -2,7 +2,6 @@ package com.yourmoney.app.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.yourmoney.app.model.Category
 import com.yourmoney.app.model.Expense
 import com.yourmoney.app.model.ExpenseSource
 import java.time.LocalDate
@@ -11,7 +10,7 @@ import java.time.LocalDate
 data class ExpenseEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val merchant: String,
-    val category: Category,
+    val categoryId: Long,
     val amountPaise: Long,
     val date: LocalDate,
     val note: String?,
@@ -25,7 +24,7 @@ data class ExpenseEntity(
 fun ExpenseEntity.toDomain() = Expense(
     id = id,
     merchant = merchant,
-    category = category,
+    categoryId = categoryId,
     amountPaise = amountPaise,
     date = date,
     note = note,
@@ -39,7 +38,7 @@ fun ExpenseEntity.toDomain() = Expense(
 fun Expense.toEntity() = ExpenseEntity(
     id = id,
     merchant = merchant,
-    category = category,
+    categoryId = categoryId,
     amountPaise = amountPaise,
     date = date,
     note = note,

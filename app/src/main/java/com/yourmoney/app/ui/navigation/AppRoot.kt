@@ -3,6 +3,7 @@ package com.yourmoney.app.ui.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.FactCheck
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
@@ -33,21 +34,27 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.yourmoney.app.ui.addexpense.AddExpenseSheet
+import com.yourmoney.app.ui.categories.CategoryManagementScreen
 import com.yourmoney.app.ui.dashboard.DashboardScreen
 import com.yourmoney.app.ui.history.HistoryScreen
 import com.yourmoney.app.ui.review.ReviewScreen
 import com.yourmoney.app.ui.settings.SettingsScreen
+import com.yourmoney.app.ui.stats.StatsScreen
 import com.yourmoney.app.ui.theme.DeepGreen
 import com.yourmoney.app.ui.yourMoneyApp
 
 private sealed class Destination(val route: String, val label: String, val icon: ImageVector) {
     data object Dashboard : Destination("dashboard", "Home", Icons.Filled.Home)
     data object History : Destination("history", "History", Icons.Filled.List)
+    data object Stats : Destination("stats", "Stats", Icons.Filled.BarChart)
     data object Review : Destination("review", "Review", Icons.Filled.FactCheck)
     data object Settings : Destination("settings", "Settings", Icons.Filled.Settings)
 }
 
-private val destinations = listOf(Destination.Dashboard, Destination.History, Destination.Review, Destination.Settings)
+private const val CATEGORIES_ROUTE = "categories"
+
+private val destinations =
+    listOf(Destination.Dashboard, Destination.History, Destination.Stats, Destination.Review, Destination.Settings)
 
 @Composable
 fun AppRoot() {
@@ -117,8 +124,16 @@ fun AppRoot() {
                 )
             }
             composable(Destination.History.route) { HistoryScreen() }
+            composable(Destination.Stats.route) { StatsScreen() }
             composable(Destination.Review.route) { ReviewScreen() }
-            composable(Destination.Settings.route) { SettingsScreen() }
+            composable(Destination.Settings.route) {
+                SettingsScreen(
+                    onManageCategories = {
+                        navController.navigate(CATEGORIES_ROUTE) { launchSingleTop = true }
+                    },
+                )
+            }
+            composable(CATEGORIES_ROUTE) { CategoryManagementScreen() }
         }
     }
 

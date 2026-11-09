@@ -30,7 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.yourmoney.app.model.Category
+import com.yourmoney.app.data.local.CategoryEntity
 import com.yourmoney.app.model.PendingExpense
 import com.yourmoney.app.model.paiseToRupees
 import com.yourmoney.app.ui.theme.DeepGreen
@@ -43,14 +43,15 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun EditPendingExpenseSheet(
     candidate: PendingExpense,
+    categories: List<CategoryEntity>,
     onDismiss: () -> Unit,
-    onSave: (merchant: String, category: Category, amountPaise: Long, date: LocalDate?) -> Unit,
+    onSave: (merchant: String, categoryId: Long, amountPaise: Long, date: LocalDate?) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState()
 
     var merchant by remember(candidate.id) { mutableStateOf(candidate.merchant) }
     var amountText by remember(candidate.id) { mutableStateOf("%.2f".format(candidate.amountPaise.paiseToRupees())) }
-    var category by remember(candidate.id) { mutableStateOf(candidate.category) }
+    var categoryId by remember(candidate.id) { mutableStateOf(candidate.categoryId) }
     var date by remember(candidate.id) { mutableStateOf(candidate.transactionAt.toLocalDate()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -98,11 +99,11 @@ fun EditPendingExpenseSheet(
                 Text("Category", style = MaterialTheme.typography.bodyMedium)
                 Spacer(modifier = Modifier.padding(top = 4.dp))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Category.entries.forEach { cat ->
+                    categories.forEach { cat ->
                         FilterChip(
-                            selected = category == cat,
-                            onClick = { category = cat },
-                            label = { Text(cat.displayName) },
+                            selected = categoryId == cat.id,
+                            onClick = { categoryId = cat.id },
+                            label = { Text(cat.name) },
                             colors = FilterChipDefaults.filterChipColors(selectedContainerColor = DeepGreen.copy(alpha = 0.15f)),
                         )
                     }
@@ -112,7 +113,7 @@ fun EditPendingExpenseSheet(
             Button(
                 onClick = {
                     val amount = amountText.toDoubleOrNull() ?: return@Button
-                    onSave(merchant.trim(), category, Math.round(amount * 100.0), date)
+                    onSave(merchant.trim(), categoryId, Math.round(amount * 100.0), date)
                 },
                 enabled = canSave,
                 modifier = Modifier

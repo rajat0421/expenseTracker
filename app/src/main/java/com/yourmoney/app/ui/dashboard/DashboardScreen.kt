@@ -61,9 +61,12 @@ fun formatPaise(amountPaise: Long): String = formatRupees(amountPaise.paiseToRup
 
 @Composable
 fun DashboardScreen(onNavigateToReview: () -> Unit = {}) {
-    val viewModel: DashboardViewModel =
-        rememberFactoryViewModel { app -> DashboardViewModel(app.repository, app.pendingExpenseRepository) }
+    val viewModel: DashboardViewModel = rememberFactoryViewModel { app ->
+        DashboardViewModel(app.repository, app.pendingExpenseRepository, app.categoryRepository)
+    }
     val uiState by viewModel.uiState.collectAsState()
+    val categories by viewModel.categories.collectAsState()
+    val categoriesById = remember(categories) { categories.associateBy { it.id } }
     var showScanSheet by remember { mutableStateOf(false) }
 
     Scaffold(containerColor = BackgroundLight) { padding ->
@@ -88,7 +91,9 @@ fun DashboardScreen(onNavigateToReview: () -> Unit = {}) {
                 item { InsightsCard(uiState) }
             }
             item { RecentTransactionsHeader() }
-            items(uiState.recentExpenses) { expense -> ExpenseRow(expense) }
+            items(uiState.recentExpenses) { expense ->
+                ExpenseRow(expense, categoryName = categoriesById[expense.categoryId]?.name ?: "Uncategorized")
+            }
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
@@ -232,7 +237,7 @@ private fun CategoryOverviewCard(uiState: DashboardUiState) {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Text(spend.category.displayName, style = MaterialTheme.typography.bodyLarge)
+                        Text(spend.categoryName, style = MaterialTheme.typography.bodyLarge)
                         Text(formatPaise(spend.amountPaise), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                     }
                     Spacer(modifier = Modifier.height(6.dp))
@@ -283,7 +288,7 @@ private fun RecentTransactionsHeader() {
 }
 
 @Composable
-fun ExpenseRow(expense: Expense) {
+fun ExpenseRow(expense: Expense, categoryName: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -304,7 +309,7 @@ fun ExpenseRow(expense: Expense) {
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    expense.category.displayName.take(1),
+                    categoryName.take(1),
                     color = DeepGreen,
                     style = MaterialTheme.typography.titleMedium,
                 )
@@ -313,7 +318,7 @@ fun ExpenseRow(expense: Expense) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(expense.merchant, style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    expense.date.format(DateTimeFormatter.ofPattern("dd MMM")) + " · " + expense.category.displayName,
+                    expense.date.format(DateTimeFormatter.ofPattern("dd MMM")) + " · " + categoryName,
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary,
                 )

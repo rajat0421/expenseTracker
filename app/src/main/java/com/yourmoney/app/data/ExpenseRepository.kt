@@ -12,9 +12,6 @@ class ExpenseRepository(private val dao: ExpenseDao) {
     fun observeAll(): Flow<List<Expense>> =
         dao.observeAll().map { entities -> entities.map { it.toDomain() } }
 
-    fun search(query: String): Flow<List<Expense>> =
-        dao.search(query).map { entities -> entities.map { it.toDomain() } }
-
     suspend fun addExpense(expense: Expense) {
         dao.insert(expense.toEntity())
     }

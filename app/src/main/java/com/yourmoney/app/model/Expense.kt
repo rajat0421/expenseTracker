@@ -9,7 +9,7 @@ import java.time.LocalDate
 data class Expense(
     val id: Long = 0,
     val merchant: String,
-    val category: Category,
+    val categoryId: Long,
     val amountPaise: Long,
     val date: LocalDate,
     val note: String? = null,
