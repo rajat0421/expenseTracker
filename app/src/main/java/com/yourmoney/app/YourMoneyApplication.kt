@@ -4,21 +4,14 @@ import android.app.Application
 import com.yourmoney.app.data.ExpenseRepository
 import com.yourmoney.app.data.PendingExpenseRepository
 import com.yourmoney.app.data.ScanHistoryRepository
-import com.yourmoney.app.data.SeedData
 import com.yourmoney.app.data.local.AppDatabase
 import com.yourmoney.app.data.sms.CandidateProcessor
 import com.yourmoney.app.data.sms.HistoricalScanner
 import com.yourmoney.app.data.sms.PendingExpenseNotifier
 import com.yourmoney.app.data.sms.SmsMessageReader
 import com.yourmoney.app.data.sms.TransactionParser
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 class YourMoneyApplication : Application() {
-
-    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val database by lazy { AppDatabase.getInstance(this) }
 
@@ -46,8 +39,5 @@ class YourMoneyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         PendingExpenseNotifier.ensureChannel(this)
-        applicationScope.launch {
-            repository.seedIfEmpty(SeedData.expenses())
-        }
     }
 }
