@@ -1,0 +1,36 @@
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.ap_
+*.dex
+*.class
+
+# Gradle
+.gradle
+/build/
+app/build/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iws
+*.ipr
+out/
+
+# Keystore
+*.jks
+*.keystore
+
+# Log/profile files
+*.log
+*.hprof
+.navigation/
