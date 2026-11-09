@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,6 +16,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -79,6 +82,52 @@ fun CategoryManagementScreen() {
                 )
             }
 
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Add New Category", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.padding(top = 10.dp))
+                    OutlinedTextField(
+                        value = newCategoryName,
+                        onValueChange = { newCategoryName = it },
+                        placeholder = { Text("e.g. Pets, Subscriptions") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(14.dp),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DeepGreen),
+                    )
+                    Spacer(modifier = Modifier.padding(top = 10.dp))
+                    Button(
+                        onClick = {
+                            val name = newCategoryName.trim()
+                            if (name.isNotBlank()) {
+                                viewModel.addCustom(name) { added ->
+                                    if (added) {
+                                        notify("Added \"$name\"")
+                                        newCategoryName = ""
+                                    }
+                                }
+                            }
+                        },
+                        enabled = newCategoryName.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = DeepGreen),
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.padding(end = 6.dp))
+                        Text("Add Category")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.padding(top = 8.dp))
+
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
@@ -100,36 +149,7 @@ fun CategoryManagementScreen() {
                         },
                     )
                 }
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                OutlinedTextField(
-                    value = newCategoryName,
-                    onValueChange = { newCategoryName = it },
-                    placeholder = { Text("New category name") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DeepGreen),
-                )
-                IconButton(onClick = {
-                    val name = newCategoryName.trim()
-                    if (name.isNotBlank()) {
-                        viewModel.addCustom(name) { added ->
-                            if (added) {
-                                notify("Added \"$name\"")
-                                newCategoryName = ""
-                            }
-                        }
-                    }
-                }) {
-                    Icon(Icons.Filled.Add, contentDescription = "Add category", tint = DeepGreen)
-                }
+                item { Spacer(modifier = Modifier.padding(bottom = 24.dp)) }
             }
         }
     }

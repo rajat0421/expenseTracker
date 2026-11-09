@@ -16,6 +16,10 @@ class ExpenseRepository(private val dao: ExpenseDao) {
         dao.insert(expense.toEntity())
     }
 
+    suspend fun updateExpense(expense: Expense) {
+        dao.update(expense.toEntity())
+    }
+
     suspend fun isEmpty(): Boolean = dao.count() == 0
 
     suspend fun existsFingerprint(fingerprint: String): Boolean = dao.findByFingerprint(fingerprint) != null

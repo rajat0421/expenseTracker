@@ -63,12 +63,15 @@ fun AppRoot() {
     val app = yourMoneyApp()
     val pendingCount by app.pendingExpenseRepository.observePendingCount().collectAsState(initial = 0)
 
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = backStackEntry?.destination
+    val showFab = currentDestination?.hierarchy?.any {
+        it.route == Destination.Dashboard.route || it.route == Destination.History.route
+    } == true
+
     Scaffold(
         bottomBar = {
             NavigationBar(containerColor = Color.White) {
-                val backStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = backStackEntry?.destination
-
                 destinations.forEach { destination ->
                     val selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true
                     NavigationBarItem(
@@ -100,12 +103,14 @@ fun AppRoot() {
             }
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddExpense = true },
-                containerColor = DeepGreen,
-                contentColor = Color.White,
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add expense")
+            if (showFab) {
+                FloatingActionButton(
+                    onClick = { showAddExpense = true },
+                    containerColor = DeepGreen,
+                    contentColor = Color.White,
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "Add expense")
+                }
             }
         },
     ) { padding ->

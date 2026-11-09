@@ -288,12 +288,13 @@ private fun RecentTransactionsHeader() {
 }
 
 @Composable
-fun ExpenseRow(expense: Expense, categoryName: String) {
+fun ExpenseRow(expense: Expense, categoryName: String, onClick: () -> Unit = {}) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        onClick = onClick,
     ) {
         Row(
             modifier = Modifier

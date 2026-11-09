@@ -14,9 +14,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class HistoryViewModel(
-    repository: ExpenseRepository,
+    private val repository: ExpenseRepository,
     categoryRepository: CategoryRepository,
 ) : ViewModel() {
 
@@ -48,4 +50,11 @@ class HistoryViewModel(
         searchText = text
         query.value = text
     }
+
+    fun updateExpense(expense: Expense, merchant: String, categoryId: Long, amountPaise: Long, date: LocalDate) =
+        viewModelScope.launch {
+            repository.updateExpense(
+                expense.copy(merchant = merchant, categoryId = categoryId, amountPaise = amountPaise, date = date),
+            )
+        }
 }

@@ -20,10 +20,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.yourmoney.app.model.Expense
 import com.yourmoney.app.ui.dashboard.ExpenseRow
 import com.yourmoney.app.ui.rememberFactoryViewModel
 import com.yourmoney.app.ui.theme.BackgroundLight
@@ -37,6 +40,7 @@ fun HistoryScreen() {
     val expenses by viewModel.expenses.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val categoriesById = remember(categories) { categories.associateBy { it.id } }
+    var editingExpense by remember { mutableStateOf<Expense?>(null) }
 
     Scaffold(containerColor = BackgroundLight) { padding ->
         LazyColumn(
@@ -78,12 +82,28 @@ fun HistoryScreen() {
                     )
                 }
             } else {
-                items(expenses) { expense ->
-                    ExpenseRow(expense, categoryName = categoriesById[expense.categoryId]?.name ?: "Uncategorized")
+                items(expenses, key = { it.id }) { expense ->
+                    ExpenseRow(
+                        expense,
+                        categoryName = categoriesById[expense.categoryId]?.name ?: "Uncategorized",
+                        onClick = { editingExpense = expense },
+                    )
                 }
             }
 
             item { androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(bottom = 80.dp)) }
         }
+    }
+
+    editingExpense?.let { expense ->
+        EditExpenseSheet(
+            expense = expense,
+            categories = categories,
+            onDismiss = { editingExpense = null },
+            onSave = { merchant, categoryId, amountPaise, date ->
+                viewModel.updateExpense(expense, merchant, categoryId, amountPaise, date)
+                editingExpense = null
+            },
+        )
     }
 }
