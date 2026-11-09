@@ -18,6 +18,8 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,11 +59,22 @@ private val destinations =
     listOf(Destination.Dashboard, Destination.History, Destination.Stats, Destination.Review, Destination.Settings)
 
 @Composable
-fun AppRoot() {
+fun AppRoot(navigateToReviewSignal: MutableState<Boolean> = remember { mutableStateOf(false) }) {
     val navController = rememberNavController()
     var showAddExpense by rememberSaveable { mutableStateOf(false) }
     val app = yourMoneyApp()
     val pendingCount by app.pendingExpenseRepository.observePendingCount().collectAsState(initial = 0)
+
+    LaunchedEffect(navigateToReviewSignal.value) {
+        if (navigateToReviewSignal.value) {
+            navController.navigate(Destination.Review.route) {
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+            navigateToReviewSignal.value = false
+        }
+    }
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
