@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class ReviewViewModel(private val repository: PendingExpenseRepository) : ViewModel() {
 
@@ -42,7 +43,8 @@ class ReviewViewModel(private val repository: PendingExpenseRepository) : ViewMo
         clearSelection()
     }
 
-    fun updateDraft(id: Long, merchant: String, category: Category, amountPaise: Long) = viewModelScope.launch {
-        repository.updateDraft(id, merchant, category, amountPaise)
-    }
+    fun updateDraft(id: Long, merchant: String, category: Category, amountPaise: Long, transactionDate: LocalDate? = null) =
+        viewModelScope.launch {
+            repository.updateDraft(id, merchant, category, amountPaise, transactionDate)
+        }
 }

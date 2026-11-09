@@ -35,7 +35,7 @@ class SmsReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val outcome = app.transactionParser.parse(message)
-                val created = app.candidateProcessor.process(outcome, ExpenseSource.SMS)
+                val created = app.candidateProcessor.process(outcome, ExpenseSource.SMS, message.body)
                 if (created && outcome is ParseOutcome.Candidate) {
                     PendingExpenseNotifier.notifyNewCandidate(
                         context.applicationContext,

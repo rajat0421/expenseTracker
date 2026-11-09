@@ -14,6 +14,10 @@ data class ParsedTransaction(
     val direction: TransactionDirection,
     val isLikelyTransfer: Boolean,
     val confidence: ConfidenceLevel,
+    /** Human-readable bank name parsed from the message body (e.g. "Axis Bank"), when identifiable. */
+    val bankName: String? = null,
+    /** Payment rail, e.g. "UPI", when identifiable. */
+    val paymentMethod: String? = null,
 )
 
 /** Outcome of running the parsing engine over a single SMS message. */

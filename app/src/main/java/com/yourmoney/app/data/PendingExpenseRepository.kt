@@ -13,6 +13,7 @@ import com.yourmoney.app.model.PendingExpense
 import com.yourmoney.app.model.ReviewStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
 
 /**
  * Owns the pending-review queue. Also owns the dedup check and the approve step (which
@@ -31,7 +32,13 @@ class PendingExpenseRepository(
     suspend fun existsFingerprint(fingerprint: String): Boolean =
         pendingDao.findByFingerprint(fingerprint) != null || expenseDao.findByFingerprint(fingerprint) != null
 
-    suspend fun addCandidate(parsed: ParsedTransaction, category: Category, fingerprint: String, source: ExpenseSource) {
+    suspend fun addCandidate(
+        parsed: ParsedTransaction,
+        category: Category,
+        fingerprint: String,
+        source: ExpenseSource,
+        originalSmsBody: String?,
+    ) {
         pendingDao.insert(
             PendingExpenseEntity(
                 merchant = parsed.merchant,
@@ -41,25 +48,38 @@ class PendingExpenseRepository(
                 accountRef = parsed.accountRef,
                 transactionRef = parsed.transactionRef,
                 bankSender = parsed.bankSender,
+                bankName = parsed.bankName,
+                paymentMethod = parsed.paymentMethod,
                 confidence = parsed.confidence,
                 status = ReviewStatus.PENDING,
                 fingerprint = fingerprint,
                 source = source,
                 detectedAtMillis = System.currentTimeMillis(),
+                originalSmsBody = originalSmsBody,
             ),
         )
     }
 
-    suspend fun updateDraft(id: Long, merchant: String, category: Category, amountPaise: Long) {
+    /** Edits are only ever applied while the candidate is still PENDING, so the original
+     * SMS body (if any) is left untouched here - it's only cleared by [approve]/[reject]. */
+    suspend fun updateDraft(id: Long, merchant: String, category: Category, amountPaise: Long, transactionDate: LocalDate? = null) {
         val existing = pendingDao.getById(id) ?: return
-        pendingDao.update(existing.copy(merchant = merchant, category = category, amountPaise = amountPaise))
+        val newTransactionAt = transactionDate?.let { existing.transactionAt.toLocalTime().atDate(it) } ?: existing.transactionAt
+        pendingDao.update(
+            existing.copy(
+                merchant = merchant,
+                category = category,
+                amountPaise = amountPaise,
+                transactionAt = newTransactionAt,
+            ),
+        )
     }
 
-    suspend fun reject(id: Long) = pendingDao.updateStatus(id, ReviewStatus.REJECTED)
+    suspend fun reject(id: Long) = pendingDao.updateStatusAndClearSms(id, ReviewStatus.REJECTED)
 
     suspend fun rejectAll(ids: List<Long>) {
         if (ids.isEmpty()) return
-        pendingDao.updateStatusForIds(ids, ReviewStatus.REJECTED)
+        pendingDao.updateStatusAndClearSmsForIds(ids, ReviewStatus.REJECTED)
     }
 
     suspend fun approve(id: Long) {
@@ -78,7 +98,7 @@ class PendingExpenseRepository(
                 fingerprint = existing.fingerprint,
             ).toEntity(),
         )
-        pendingDao.updateStatus(id, ReviewStatus.APPROVED)
+        pendingDao.updateStatusAndClearSms(id, ReviewStatus.APPROVED)
     }
 
     suspend fun approveAll(ids: List<Long>) {

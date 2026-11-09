@@ -28,9 +28,14 @@ interface PendingExpenseDao {
     @Update
     suspend fun update(entity: PendingExpenseEntity)
 
-    @Query("UPDATE pending_expenses SET status = :status WHERE id = :id")
-    suspend fun updateStatus(id: Long, status: ReviewStatus)
+    /**
+     * Used for approve/reject: the original SMS body is only ever needed while a candidate
+     * is PENDING, so leaving this review state clears it in the same statement - it can
+     * never be left behind by a bug in a separate "clear" step run at the wrong time.
+     */
+    @Query("UPDATE pending_expenses SET status = :status, originalSmsBody = NULL WHERE id = :id")
+    suspend fun updateStatusAndClearSms(id: Long, status: ReviewStatus)
 
-    @Query("UPDATE pending_expenses SET status = :status WHERE id IN (:ids)")
-    suspend fun updateStatusForIds(ids: List<Long>, status: ReviewStatus)
+    @Query("UPDATE pending_expenses SET status = :status, originalSmsBody = NULL WHERE id IN (:ids)")
+    suspend fun updateStatusAndClearSmsForIds(ids: List<Long>, status: ReviewStatus)
 }

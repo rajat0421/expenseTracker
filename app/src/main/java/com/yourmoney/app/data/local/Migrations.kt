@@ -51,4 +51,12 @@ object Migrations {
             )
         }
     }
+
+    val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE pending_expenses ADD COLUMN bankName TEXT")
+            db.execSQL("ALTER TABLE pending_expenses ADD COLUMN paymentMethod TEXT")
+            db.execSQL("ALTER TABLE pending_expenses ADD COLUMN originalSmsBody TEXT")
+        }
+    }
 }

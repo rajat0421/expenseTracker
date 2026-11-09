@@ -41,7 +41,7 @@ class HistoricalScanner(
             examined++
             try {
                 val outcome = parser.parse(sms)
-                if (candidateProcessor.process(outcome, ExpenseSource.SMS)) {
+                if (candidateProcessor.process(outcome, ExpenseSource.SMS, sms.body)) {
                     candidates++
                 }
             } catch (e: Exception) {

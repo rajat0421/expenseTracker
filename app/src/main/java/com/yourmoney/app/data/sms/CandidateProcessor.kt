@@ -12,8 +12,12 @@ import com.yourmoney.app.model.ExpenseSource
  */
 class CandidateProcessor(private val pendingExpenseRepository: PendingExpenseRepository) {
 
-    /** Returns true if a new pending candidate was created (false for ignored/duplicate). */
-    suspend fun process(outcome: ParseOutcome, source: ExpenseSource): Boolean {
+    /**
+     * Returns true if a new pending candidate was created (false for ignored/duplicate).
+     * [originalSmsBody] is kept only in the pending row, only until the user approves or
+     * rejects the candidate - never logged, never sent anywhere.
+     */
+    suspend fun process(outcome: ParseOutcome, source: ExpenseSource, originalSmsBody: String): Boolean {
         val parsed = when (outcome) {
             is ParseOutcome.Candidate -> outcome.parsed
             is ParseOutcome.Transfer, ParseOutcome.NotTransaction -> return false
@@ -23,7 +27,7 @@ class CandidateProcessor(private val pendingExpenseRepository: PendingExpenseRep
         if (pendingExpenseRepository.existsFingerprint(fingerprint)) return false
 
         val category = Categorizer.suggestCategoryOrNull(parsed.merchant) ?: Category.UNCATEGORIZED
-        pendingExpenseRepository.addCandidate(parsed, category, fingerprint, source)
+        pendingExpenseRepository.addCandidate(parsed, category, fingerprint, source, originalSmsBody)
         return true
     }
 }

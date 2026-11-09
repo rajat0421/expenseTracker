@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 
 @Database(
     entities = [ExpenseEntity::class, PendingExpenseEntity::class, ScanHistoryEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -29,7 +29,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "yourmoney.db",
                 )
-                    .addMigrations(Migrations.MIGRATION_1_2)
+                    .addMigrations(Migrations.MIGRATION_1_2, Migrations.MIGRATION_2_3)
                     .build()
                     .also { instance = it }
             }
