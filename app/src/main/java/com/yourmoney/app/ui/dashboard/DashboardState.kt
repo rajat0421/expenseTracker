@@ -12,7 +12,6 @@ data class DashboardUiState(
     val dailyAverage: Double = 0.0,
     val recentExpenses: List<Expense> = emptyList(),
     val categorySpends: List<CategorySpend> = emptyList(),
-    val insights: List<String> = emptyList(),
     val pendingReviewCount: Int = 0,
 )
 
@@ -40,9 +39,7 @@ fun buildDashboardState(expenses: List<Expense>, categoryNames: Map<Long, String
         )
     }
 
-    val recent = expenses.sortedByDescending { it.date }.take(6)
-
-    val insights = buildInsights(categorySpends, totalSpentThisMonth, dailyAverage, daysElapsed, today)
+    val recent = expenses.sortedByDescending { it.date }.take(5)
 
     return DashboardUiState(
         totalSpentThisMonth = totalSpentThisMonth,
@@ -50,32 +47,5 @@ fun buildDashboardState(expenses: List<Expense>, categoryNames: Map<Long, String
         dailyAverage = dailyAverage,
         recentExpenses = recent,
         categorySpends = categorySpends,
-        insights = insights,
     )
-}
-
-private fun buildInsights(
-    categorySpends: List<CategorySpend>,
-    totalSpentThisMonth: Long,
-    dailyAverage: Double,
-    daysElapsed: Int,
-    today: LocalDate,
-): List<String> {
-    val insights = mutableListOf<String>()
-
-    categorySpends.firstOrNull()?.let {
-        insights.add(
-            "Your biggest spend this month is ${it.categoryName} at ${"%.0f".format(it.percent * 100)}% of total expenses."
-        )
-    }
-
-    val daysInMonth = today.lengthOfMonth()
-    val projectedMonthSpend = dailyAverage * daysInMonth
-    insights.add("At this rate, you're projected to spend ₹${"%,.0f".format(projectedMonthSpend)} by month end.")
-
-    if (daysElapsed > 0) {
-        insights.add("You've spent ₹${"%,.0f".format(totalSpentThisMonth.toDouble() / 100)} across $daysElapsed day${if (daysElapsed > 1) "s" else ""} this month.")
-    }
-
-    return insights
 }

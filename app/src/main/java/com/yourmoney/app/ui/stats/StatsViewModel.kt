@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 class StatsViewModel(
@@ -29,6 +30,10 @@ class StatsViewModel(
     val buckets: StateFlow<List<StatBucket>> = combine(expenses, _period) { expenseList, period ->
         buildBuckets(expenseList, period)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val summary: StateFlow<StatsSummary> = buckets
+        .map { buildSummary(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), buildSummary(emptyList()))
 
     fun setPeriod(value: StatsPeriod) {
         _period.value = value

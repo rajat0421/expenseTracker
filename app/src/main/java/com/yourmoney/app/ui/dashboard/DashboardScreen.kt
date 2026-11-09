@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yourmoney.app.model.Expense
 import com.yourmoney.app.model.paiseToRupees
+import com.yourmoney.app.ui.history.EditExpenseSheet
 import com.yourmoney.app.ui.rememberFactoryViewModel
 import com.yourmoney.app.ui.scan.ScanSheet
 import com.yourmoney.app.ui.theme.BackgroundLight
@@ -68,6 +69,7 @@ fun DashboardScreen(onNavigateToReview: () -> Unit = {}) {
     val categories by viewModel.categories.collectAsState()
     val categoriesById = remember(categories) { categories.associateBy { it.id } }
     var showScanSheet by remember { mutableStateOf(false) }
+    var editingExpense by remember { mutableStateOf<Expense?>(null) }
 
     Scaffold(containerColor = BackgroundLight) { padding ->
         LazyColumn(
@@ -87,12 +89,13 @@ fun DashboardScreen(onNavigateToReview: () -> Unit = {}) {
             if (uiState.categorySpends.isNotEmpty()) {
                 item { CategoryOverviewCard(uiState) }
             }
-            if (uiState.insights.isNotEmpty()) {
-                item { InsightsCard(uiState) }
-            }
             item { RecentTransactionsHeader() }
-            items(uiState.recentExpenses) { expense ->
-                ExpenseRow(expense, categoryName = categoriesById[expense.categoryId]?.name ?: "Uncategorized")
+            items(uiState.recentExpenses, key = { it.id }) { expense ->
+                ExpenseRow(
+                    expense,
+                    categoryName = categoriesById[expense.categoryId]?.name ?: "Uncategorized",
+                    onClick = { editingExpense = expense },
+                )
             }
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
@@ -100,6 +103,18 @@ fun DashboardScreen(onNavigateToReview: () -> Unit = {}) {
 
     if (showScanSheet) {
         ScanSheet(onDismiss = { showScanSheet = false })
+    }
+
+    editingExpense?.let { expense ->
+        EditExpenseSheet(
+            expense = expense,
+            categories = categories,
+            onDismiss = { editingExpense = null },
+            onSave = { merchant, categoryId, amountPaise, date ->
+                viewModel.updateExpense(expense, merchant, categoryId, amountPaise, date)
+                editingExpense = null
+            },
+        )
     }
 }
 
@@ -251,32 +266,6 @@ private fun CategoryOverviewCard(uiState: DashboardUiState) {
                         trackColor = SoftGreen,
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun InsightsCard(uiState: DashboardUiState) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SoftGreen),
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Insights, contentDescription = null, tint = DeepGreen, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Financial Insights", style = MaterialTheme.typography.titleMedium, color = DeepGreen)
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            uiState.insights.forEach { insight ->
-                Text(
-                    "•  $insight",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
             }
         }
     }
