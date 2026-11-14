@@ -10,6 +10,7 @@ data class DashboardUiState(
     val totalSpentThisMonth: Long = 0,
     val todaySpend: Long = 0,
     val dailyAverage: Double = 0.0,
+    val trendPercent: Int? = null,
     val recentExpenses: List<Expense> = emptyList(),
     val categorySpends: List<CategorySpend> = emptyList(),
     val pendingReviewCount: Int = 0,
@@ -18,8 +19,16 @@ data class DashboardUiState(
 fun buildDashboardState(expenses: List<Expense>, categoryNames: Map<Long, String>): DashboardUiState {
     val today = LocalDate.now()
     val monthExpenses = expenses.filter { it.date.month == today.month && it.date.year == today.year }
+    val lastMonth = today.minusMonths(1)
+    val lastMonthExpenses = expenses.filter { it.date.month == lastMonth.month && it.date.year == lastMonth.year }
 
     val totalSpentThisMonth = monthExpenses.sumOf { it.amountPaise }
+    val lastMonthTotal = lastMonthExpenses.sumOf { it.amountPaise }
+    val trendPercent = if (lastMonthTotal > 0) {
+        (((totalSpentThisMonth - lastMonthTotal).toDouble() / lastMonthTotal) * 100).toInt()
+    } else {
+        null
+    }
     val todaySpend = expenses.filter { it.date == today }.sumOf { it.amountPaise }
     val daysElapsed = today.dayOfMonth.coerceAtLeast(1)
     val dailyAverage = totalSpentThisMonth.paiseToRupees() / daysElapsed
@@ -45,6 +54,7 @@ fun buildDashboardState(expenses: List<Expense>, categoryNames: Map<Long, String
         totalSpentThisMonth = totalSpentThisMonth,
         todaySpend = todaySpend,
         dailyAverage = dailyAverage,
+        trendPercent = trendPercent,
         recentExpenses = recent,
         categorySpends = categorySpends,
     )

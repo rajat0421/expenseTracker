@@ -151,6 +151,15 @@ fun AppRoot(reviewFocusId: MutableState<Long?> = remember { mutableStateOf(null)
                             launchSingleTop = true
                         }
                     },
+                    onNavigateToHistory = {
+                        navController.navigate(Destination.History.route) { launchSingleTop = true }
+                    },
+                    onNavigateToStats = {
+                        navController.navigate(Destination.Stats.route) { launchSingleTop = true }
+                    },
+                    onNavigateToSettings = {
+                        navController.navigate(Destination.Settings.route) { launchSingleTop = true }
+                    },
                 )
             }
             composable(Destination.History.route) { HistoryScreen() }
