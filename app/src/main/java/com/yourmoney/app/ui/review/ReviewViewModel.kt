@@ -3,6 +3,7 @@ package com.yourmoney.app.ui.review
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yourmoney.app.data.CategoryRepository
+import com.yourmoney.app.data.MerchantRepository
 import com.yourmoney.app.data.PendingExpenseRepository
 import com.yourmoney.app.data.local.CategoryEntity
 import com.yourmoney.app.model.PendingExpense
@@ -25,6 +26,7 @@ enum class SortOption(val label: String) {
 class ReviewViewModel(
     private val repository: PendingExpenseRepository,
     categoryRepository: CategoryRepository,
+    private val merchantRepository: MerchantRepository,
 ) : ViewModel() {
 
     private val _sortOption = MutableStateFlow(SortOption.DATE_NEWEST)
@@ -85,5 +87,12 @@ class ReviewViewModel(
     fun updateDraft(id: Long, merchant: String, categoryId: Long, amountPaise: Long, transactionDate: LocalDate? = null) =
         viewModelScope.launch {
             repository.updateDraft(id, merchant, categoryId, amountPaise, transactionDate)
+        }
+
+    /** Called after the user corrects a merchant/category away from Uncategorized, if they
+     * opt in via the "Remember this merchant?" snackbar action. */
+    fun rememberMerchant(originalMerchantText: String, displayName: String, categoryId: Long) =
+        viewModelScope.launch {
+            merchantRepository.rememberMerchant(originalMerchantText, displayName, categoryId)
         }
 }

@@ -5,10 +5,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yourmoney.app.data.Categorizer
 import com.yourmoney.app.data.CategoryRepository
 import com.yourmoney.app.data.ExpenseRepository
+import com.yourmoney.app.data.MerchantRepository
 import com.yourmoney.app.data.local.CategoryEntity
+import com.yourmoney.app.data.local.MerchantAliasLookup
+import com.yourmoney.app.data.merchant.MerchantMatcher
 import com.yourmoney.app.model.Expense
 import com.yourmoney.app.model.ExpenseSource
 import com.yourmoney.app.model.rupeesToPaise
@@ -23,9 +25,13 @@ import java.time.LocalDate
 class AddExpenseViewModel(
     private val repository: ExpenseRepository,
     private val categoryRepository: CategoryRepository,
+    merchantRepository: MerchantRepository,
 ) : ViewModel() {
 
     val categories: StateFlow<List<CategoryEntity>> = categoryRepository.observeAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private val aliasLookup: StateFlow<List<MerchantAliasLookup>> = merchantRepository.observeAliasLookup()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     var merchant by mutableStateOf("")
@@ -54,9 +60,9 @@ class AddExpenseViewModel(
     fun onMerchantChange(value: String) {
         merchant = value
         if (!categoryManuallySet) {
-            val key = Categorizer.suggestCategoryKey(value)
-            val match = key?.let { k -> categories.value.firstOrNull { it.key == k } }
-            if (match != null) category = match
+            val match = MerchantMatcher.match(value, aliasLookup.value)
+            val matchedCategory = match?.let { m -> categories.value.firstOrNull { it.id == m.categoryId } }
+            if (matchedCategory != null) category = matchedCategory
         }
     }
 

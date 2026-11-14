@@ -41,7 +41,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AddExpenseSheet(onDismiss: () -> Unit) {
     val viewModel: AddExpenseViewModel =
-        rememberFactoryViewModel { app -> AddExpenseViewModel(app.repository, app.categoryRepository) }
+        rememberFactoryViewModel { app -> AddExpenseViewModel(app.repository, app.categoryRepository, app.merchantRepository) }
     val sheetState = rememberModalBottomSheetState()
     val categories by viewModel.categories.collectAsState()
     var showDatePicker by remember { mutableStateOf(false) }

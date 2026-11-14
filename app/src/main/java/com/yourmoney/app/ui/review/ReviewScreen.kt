@@ -41,6 +41,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -78,11 +79,13 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun ReviewScreen(focusExpenseId: Long? = null) {
-    val viewModel: ReviewViewModel =
-        rememberFactoryViewModel { app -> ReviewViewModel(app.pendingExpenseRepository, app.categoryRepository) }
+    val viewModel: ReviewViewModel = rememberFactoryViewModel { app ->
+        ReviewViewModel(app.pendingExpenseRepository, app.categoryRepository, app.merchantRepository)
+    }
     val pending by viewModel.pending.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val categoriesById = remember(categories) { categories.associateBy { it.id } }
+    val uncategorizedId = remember(categories) { categories.firstOrNull { it.key == "UNCATEGORIZED" }?.id }
     val selectedIds by viewModel.selectedIds.collectAsState()
     val sortOption by viewModel.sortOption.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -102,6 +105,18 @@ fun ReviewScreen(focusExpenseId: Long? = null) {
 
     fun notify(message: String) {
         scope.launch { snackbarHostState.showSnackbar(message) }
+    }
+
+    fun offerToRememberMerchant(originalMerchantText: String, displayName: String, categoryId: Long) {
+        scope.launch {
+            val result = snackbarHostState.showSnackbar(
+                message = "Remember $displayName for next time?",
+                actionLabel = "Remember",
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                viewModel.rememberMerchant(originalMerchantText, displayName, categoryId)
+            }
+        }
     }
 
     val needsAttentionCount = pending.count { it.confidence == ConfidenceLevel.LOW }
@@ -186,6 +201,9 @@ fun ReviewScreen(focusExpenseId: Long? = null) {
                             onToggleSelected = { viewModel.toggleSelected(candidate.id) },
                             onCategoryChange = { newCategoryId ->
                                 viewModel.updateDraft(candidate.id, candidate.merchant, newCategoryId, candidate.amountPaise)
+                                if (candidate.categoryId == uncategorizedId && newCategoryId != uncategorizedId) {
+                                    offerToRememberMerchant(candidate.merchant, candidate.merchant, newCategoryId)
+                                }
                             },
                             onApprove = {
                                 viewModel.approve(candidate.id)
@@ -212,7 +230,11 @@ fun ReviewScreen(focusExpenseId: Long? = null) {
             onSave = { merchant, categoryId, amountPaise, date ->
                 viewModel.updateDraft(candidate.id, merchant, categoryId, amountPaise, date)
                 editingCandidate = null
-                notify("Expense updated")
+                if (candidate.categoryId == uncategorizedId && categoryId != uncategorizedId) {
+                    offerToRememberMerchant(candidate.merchant, merchant, categoryId)
+                } else {
+                    notify("Expense updated")
+                }
             },
         )
     }

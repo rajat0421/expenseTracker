@@ -1,8 +1,8 @@
 package com.yourmoney.app.data.sms
 
-import com.yourmoney.app.data.Categorizer
 import com.yourmoney.app.data.CategoryRepository
 import com.yourmoney.app.data.PendingExpenseRepository
+import com.yourmoney.app.data.merchant.MerchantRecognitionEngine
 import com.yourmoney.app.model.ExpenseSource
 
 /**
@@ -13,6 +13,7 @@ import com.yourmoney.app.model.ExpenseSource
 class CandidateProcessor(
     private val pendingExpenseRepository: PendingExpenseRepository,
     private val categoryRepository: CategoryRepository,
+    private val merchantRecognitionEngine: MerchantRecognitionEngine,
 ) {
 
     /**
@@ -29,9 +30,11 @@ class CandidateProcessor(
         val fingerprint = FingerprintCalculator.compute(parsed)
         if (pendingExpenseRepository.existsFingerprint(fingerprint)) return null
 
-        val key = Categorizer.suggestCategoryKey(parsed.merchant)
-        val categoryId = key?.let { categoryRepository.findByKey(it)?.id } ?: categoryRepository.uncategorizedId()
+        val match = merchantRecognitionEngine.recognize(parsed.merchant)
+        val categoryId = match?.categoryId ?: categoryRepository.uncategorizedId()
+        // Canonicalize to the recognized merchant's display name (e.g. "SWIGGY LTD" -> "Swiggy").
+        val finalParsed = if (match != null) parsed.copy(merchant = match.displayName) else parsed
 
-        return pendingExpenseRepository.addCandidate(parsed, categoryId, fingerprint, source, originalSmsBody)
+        return pendingExpenseRepository.addCandidate(finalParsed, categoryId, fingerprint, source, originalSmsBody)
     }
 }

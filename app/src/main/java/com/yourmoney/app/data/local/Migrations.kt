@@ -181,4 +181,32 @@ object Migrations {
             db.execSQL("ALTER TABLE pending_expenses_new RENAME TO pending_expenses")
         }
     }
+
+    val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS merchants (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    displayName TEXT NOT NULL,
+                    categoryId INTEGER NOT NULL,
+                    isBuiltIn INTEGER NOT NULL
+                )
+                """.trimIndent(),
+            )
+            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_merchants_displayName ON merchants(displayName)")
+
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS merchant_aliases (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    merchantId INTEGER NOT NULL,
+                    alias TEXT NOT NULL,
+                    isUserAdded INTEGER NOT NULL
+                )
+                """.trimIndent(),
+            )
+            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_merchant_aliases_alias ON merchant_aliases(alias)")
+        }
+    }
 }

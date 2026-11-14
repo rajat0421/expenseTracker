@@ -41,6 +41,7 @@ import com.yourmoney.app.ui.addexpense.AddExpenseSheet
 import com.yourmoney.app.ui.categories.CategoryManagementScreen
 import com.yourmoney.app.ui.dashboard.DashboardScreen
 import com.yourmoney.app.ui.history.HistoryScreen
+import com.yourmoney.app.ui.merchants.MerchantManagementScreen
 import com.yourmoney.app.ui.review.ReviewScreen
 import com.yourmoney.app.ui.settings.SettingsScreen
 import com.yourmoney.app.ui.stats.StatsScreen
@@ -56,6 +57,7 @@ private sealed class Destination(val route: String, val label: String, val icon:
 }
 
 private const val CATEGORIES_ROUTE = "categories"
+private const val MERCHANTS_ROUTE = "merchants"
 private const val REVIEW_BASE_ROUTE = "review"
 private const val REVIEW_FOCUS_ARG = "focusId"
 private const val REVIEW_ROUTE_PATTERN = "$REVIEW_BASE_ROUTE?$REVIEW_FOCUS_ARG={$REVIEW_FOCUS_ARG}"
@@ -165,9 +167,13 @@ fun AppRoot(reviewFocusId: MutableState<Long?> = remember { mutableStateOf(null)
                     onManageCategories = {
                         navController.navigate(CATEGORIES_ROUTE) { launchSingleTop = true }
                     },
+                    onManageMerchants = {
+                        navController.navigate(MERCHANTS_ROUTE) { launchSingleTop = true }
+                    },
                 )
             }
             composable(CATEGORIES_ROUTE) { CategoryManagementScreen() }
+            composable(MERCHANTS_ROUTE) { MerchantManagementScreen() }
         }
     }
 

@@ -3,9 +3,11 @@ package com.yourmoney.app
 import android.app.Application
 import com.yourmoney.app.data.CategoryRepository
 import com.yourmoney.app.data.ExpenseRepository
+import com.yourmoney.app.data.MerchantRepository
 import com.yourmoney.app.data.PendingExpenseRepository
 import com.yourmoney.app.data.ScanHistoryRepository
 import com.yourmoney.app.data.local.AppDatabase
+import com.yourmoney.app.data.merchant.MerchantRecognitionEngine
 import com.yourmoney.app.data.sms.CandidateProcessor
 import com.yourmoney.app.data.sms.HistoricalScanner
 import com.yourmoney.app.data.sms.PendingExpenseNotifier
@@ -26,6 +28,10 @@ class YourMoneyApplication : Application() {
 
     val categoryRepository: CategoryRepository by lazy { CategoryRepository(database.categoryDao()) }
 
+    val merchantRepository: MerchantRepository by lazy { MerchantRepository(database.merchantDao()) }
+
+    val merchantRecognitionEngine: MerchantRecognitionEngine by lazy { MerchantRecognitionEngine(merchantRepository) }
+
     val pendingExpenseRepository: PendingExpenseRepository by lazy {
         PendingExpenseRepository(database.pendingExpenseDao(), database.expenseDao())
     }
@@ -34,7 +40,9 @@ class YourMoneyApplication : Application() {
 
     val transactionParser: TransactionParser by lazy { TransactionParser() }
 
-    val candidateProcessor: CandidateProcessor by lazy { CandidateProcessor(pendingExpenseRepository, categoryRepository) }
+    val candidateProcessor: CandidateProcessor by lazy {
+        CandidateProcessor(pendingExpenseRepository, categoryRepository, merchantRecognitionEngine)
+    }
 
     val historicalScanner: HistoricalScanner by lazy {
         HistoricalScanner(
@@ -49,7 +57,9 @@ class YourMoneyApplication : Application() {
         super.onCreate()
         PendingExpenseNotifier.ensureChannel(this)
         applicationScope.launch {
+            // Merchant seeding looks up category ids by key, so categories must be seeded first.
             categoryRepository.ensureSeeded()
+            merchantRepository.ensureSeeded(categoryRepository)
         }
     }
 }

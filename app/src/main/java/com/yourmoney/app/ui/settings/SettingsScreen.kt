@@ -49,7 +49,7 @@ import com.yourmoney.app.ui.theme.ExpenseRed
 import com.yourmoney.app.ui.theme.TextSecondary
 
 @Composable
-fun SettingsScreen(onManageCategories: () -> Unit = {}) {
+fun SettingsScreen(onManageCategories: () -> Unit = {}, onManageMerchants: () -> Unit = {}) {
     val context = LocalContext.current
     var readSmsGranted by remember { mutableStateOf(hasPermission(context, Manifest.permission.READ_SMS)) }
     var receiveSmsGranted by remember { mutableStateOf(hasPermission(context, Manifest.permission.RECEIVE_SMS)) }
@@ -93,6 +93,33 @@ fun SettingsScreen(onManageCategories: () -> Unit = {}) {
                         Text("Manage Categories", style = MaterialTheme.typography.titleMedium)
                         Text(
                             "Rename existing categories or add your own.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextSecondary,
+                        )
+                    }
+                    Text("Edit", style = MaterialTheme.typography.bodyMedium, color = DeepGreen)
+                }
+            }
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp)),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                onClick = onManageMerchants,
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Manage Merchants", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Recognized businesses used to auto-categorize expenses from SMS.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextSecondary,
                         )
