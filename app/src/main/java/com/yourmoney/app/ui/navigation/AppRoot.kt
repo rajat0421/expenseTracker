@@ -103,9 +103,8 @@ fun AppRoot(reviewFocusId: MutableState<Long?> = remember { mutableStateOf(null)
                         selected = selected,
                         onClick = {
                             navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                popUpTo(navController.graph.findStartDestination().id)
                                 launchSingleTop = true
-                                restoreState = true
                             }
                         },
                         icon = {
@@ -156,9 +155,6 @@ fun AppRoot(reviewFocusId: MutableState<Long?> = remember { mutableStateOf(null)
                     },
                     onNavigateToStats = {
                         navController.navigate(Destination.Stats.route) { launchSingleTop = true }
-                    },
-                    onNavigateToSettings = {
-                        navController.navigate(Destination.Settings.route) { launchSingleTop = true }
                     },
                 )
             }

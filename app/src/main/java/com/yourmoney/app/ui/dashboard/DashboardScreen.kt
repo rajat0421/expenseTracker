@@ -74,7 +74,6 @@ fun DashboardScreen(
     onNavigateToReview: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToStats: () -> Unit = {},
-    onNavigateToSettings: () -> Unit = {},
 ) {
     val viewModel: DashboardViewModel = rememberFactoryViewModel { app ->
         DashboardViewModel(app.repository, app.pendingExpenseRepository, app.categoryRepository)
@@ -93,12 +92,7 @@ fun DashboardScreen(
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item {
-                DashboardHeader(
-                    onBellClick = onNavigateToReview,
-                    onAvatarClick = onNavigateToSettings,
-                )
-            }
+            item { DashboardHeader() }
             item { TotalSpentCard(uiState) }
             item { ScanExpensesButton(onClick = { showScanSheet = true }) }
             if (uiState.pendingReviewCount > 0) {
@@ -138,33 +132,8 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun DashboardHeader(onBellClick: () -> Unit, onAvatarClick: () -> Unit) {
+private fun DashboardHeader() {
     Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                "Home",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.weight(1f),
-            )
-            IconButton(onClick = onBellClick) {
-                Icon(Icons.Filled.Notifications, contentDescription = "Review", tint = TextSecondary)
-            }
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(DeepGreen)
-                    .clickable(onClick = onAvatarClick),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(Icons.Filled.AccountCircle, contentDescription = "Settings", tint = Color.White, modifier = Modifier.size(28.dp))
-            }
-        }
-        Spacer(modifier = Modifier.height(12.dp))
         Text("Good day 🌱", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
         Text(
             "Your Expenses",

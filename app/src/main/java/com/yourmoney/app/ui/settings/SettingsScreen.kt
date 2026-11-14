@@ -49,7 +49,7 @@ import com.yourmoney.app.ui.theme.ExpenseRed
 import com.yourmoney.app.ui.theme.TextSecondary
 
 @Composable
-fun SettingsScreen(onManageCategories: () -> Unit = {}, onManageMerchants: () -> Unit = {}) {
+fun SettingsScreen(onManageCategories: () -> Unit = {}) {
     val context = LocalContext.current
     var readSmsGranted by remember { mutableStateOf(hasPermission(context, Manifest.permission.READ_SMS)) }
     var receiveSmsGranted by remember { mutableStateOf(hasPermission(context, Manifest.permission.RECEIVE_SMS)) }
