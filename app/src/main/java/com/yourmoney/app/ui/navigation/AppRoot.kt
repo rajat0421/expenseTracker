@@ -88,7 +88,7 @@ fun AppRoot(reviewFocusId: MutableState<Long?> = remember { mutableStateOf(null)
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val showFab = currentDestination?.hierarchy?.any {
-        it.route == Destination.Dashboard.route || it.route == Destination.History.route
+        it.route == Destination.Dashboard.route || it.route == Destination.History.route || it.route == Destination.Stats.route
     } == true
 
     Scaffold(

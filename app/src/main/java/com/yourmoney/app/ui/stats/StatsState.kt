@@ -1,6 +1,7 @@
 package com.yourmoney.app.ui.stats
 
 import com.yourmoney.app.model.Expense
+import com.yourmoney.app.model.paiseToRupees
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
@@ -106,3 +107,48 @@ fun buildSummary(buckets: List<StatBucket>): StatsSummary {
 
 private fun List<Expense>.sumPaiseInRange(start: LocalDate, end: LocalDate): Long =
     filter { !it.date.isBefore(start) && !it.date.isAfter(end) }.sumOf { it.amountPaise }
+
+fun List<Expense>.inBucket(bucket: StatBucket): List<Expense> =
+    filter { !it.date.isBefore(bucket.startDate) && !it.date.isAfter(bucket.endDate) }
+
+data class CategoryBreakdown(
+    val categoryId: Long,
+    val name: String,
+    val key: String?,
+    val amountPaise: Long,
+    val percent: Float,
+    val count: Int,
+)
+
+fun categoryBreakdown(
+    expensesInBucket: List<Expense>,
+    categoriesById: Map<Long, com.yourmoney.app.data.local.CategoryEntity>,
+): List<CategoryBreakdown> {
+    val total = expensesInBucket.sumOf { it.amountPaise }
+    return expensesInBucket
+        .groupBy { it.categoryId }
+        .map { (categoryId, items) ->
+            val amount = items.sumOf { it.amountPaise }
+            val category = categoriesById[categoryId]
+            CategoryBreakdown(
+                categoryId = categoryId,
+                name = category?.name ?: "Uncategorized",
+                key = category?.key,
+                amountPaise = amount,
+                percent = if (total > 0) amount.toFloat() / total else 0f,
+                count = items.size,
+            )
+        }
+        .sortedByDescending { it.amountPaise }
+}
+
+/** Compact "₹5.4k" / "₹1.2L" style formatting used for chart bar labels. */
+fun formatCompactRupees(paise: Long): String {
+    val rupees = paise.paiseToRupees()
+    val abs = kotlin.math.abs(rupees)
+    return when {
+        abs >= 100_000 -> "₹%.1fL".format(rupees / 100_000)
+        abs >= 1_000 -> "₹%.1fk".format(rupees / 1_000)
+        else -> "₹%,.0f".format(rupees)
+    }
+}
