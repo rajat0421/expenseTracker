@@ -31,14 +31,15 @@ class PendingExpenseRepository(
     suspend fun existsFingerprint(fingerprint: String): Boolean =
         pendingDao.findByFingerprint(fingerprint) != null || expenseDao.findByFingerprint(fingerprint) != null
 
+    /** Returns the new row's id, so callers (e.g. a notification) can deep-link to it. */
     suspend fun addCandidate(
         parsed: ParsedTransaction,
         categoryId: Long,
         fingerprint: String,
         source: ExpenseSource,
         originalSmsBody: String?,
-    ) {
-        pendingDao.insert(
+    ): Long {
+        return pendingDao.insert(
             PendingExpenseEntity(
                 merchant = parsed.merchant,
                 categoryId = categoryId,

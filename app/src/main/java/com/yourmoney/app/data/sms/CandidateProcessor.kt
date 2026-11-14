@@ -16,23 +16,22 @@ class CandidateProcessor(
 ) {
 
     /**
-     * Returns true if a new pending candidate was created (false for ignored/duplicate).
+     * Returns the new pending candidate's id, or null if it was ignored/a duplicate.
      * [originalSmsBody] is kept only in the pending row, only until the user approves or
      * rejects the candidate - never logged, never sent anywhere.
      */
-    suspend fun process(outcome: ParseOutcome, source: ExpenseSource, originalSmsBody: String): Boolean {
+    suspend fun process(outcome: ParseOutcome, source: ExpenseSource, originalSmsBody: String): Long? {
         val parsed = when (outcome) {
             is ParseOutcome.Candidate -> outcome.parsed
-            is ParseOutcome.Transfer, ParseOutcome.NotTransaction -> return false
+            is ParseOutcome.Transfer, ParseOutcome.NotTransaction -> return null
         }
 
         val fingerprint = FingerprintCalculator.compute(parsed)
-        if (pendingExpenseRepository.existsFingerprint(fingerprint)) return false
+        if (pendingExpenseRepository.existsFingerprint(fingerprint)) return null
 
         val key = Categorizer.suggestCategoryKey(parsed.merchant)
         val categoryId = key?.let { categoryRepository.findByKey(it)?.id } ?: categoryRepository.uncategorizedId()
 
-        pendingExpenseRepository.addCandidate(parsed, categoryId, fingerprint, source, originalSmsBody)
-        return true
+        return pendingExpenseRepository.addCandidate(parsed, categoryId, fingerprint, source, originalSmsBody)
     }
 }

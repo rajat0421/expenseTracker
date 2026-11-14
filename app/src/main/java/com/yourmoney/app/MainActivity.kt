@@ -11,7 +11,7 @@ import com.yourmoney.app.ui.theme.YourMoneyTheme
 
 class MainActivity : ComponentActivity() {
 
-    private val navigateToReviewSignal = mutableStateOf(false)
+    private val reviewFocusId = mutableStateOf<Long?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
         setContent {
             YourMoneyTheme {
-                AppRoot(navigateToReviewSignal = navigateToReviewSignal)
+                AppRoot(reviewFocusId = reviewFocusId)
             }
         }
     }
@@ -31,12 +31,13 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        if (intent?.getBooleanExtra(EXTRA_OPEN_REVIEW, false) == true) {
-            navigateToReviewSignal.value = true
+        val id = intent?.getLongExtra(EXTRA_PENDING_EXPENSE_ID, -1L) ?: -1L
+        if (id != -1L) {
+            reviewFocusId.value = id
         }
     }
 
     companion object {
-        const val EXTRA_OPEN_REVIEW = "open_review"
+        const val EXTRA_PENDING_EXPENSE_ID = "pending_expense_id"
     }
 }

@@ -32,7 +32,7 @@ object PendingExpenseNotifier {
         manager.createNotificationChannel(channel)
     }
 
-    fun notifyNewCandidate(context: Context, merchant: String, amountPaise: Long) {
+    fun notifyNewCandidate(context: Context, merchant: String, amountPaise: Long, pendingExpenseId: Long) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val granted = ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
                 PackageManager.PERMISSION_GRANTED
@@ -47,20 +47,22 @@ object PendingExpenseNotifier {
             .setContentText("₹%,.2f at %s — tap to review".format(amountRupees, merchant))
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setContentIntent(buildReviewPendingIntent(context))
+            .setContentIntent(buildReviewPendingIntent(context, pendingExpenseId))
             .build()
 
-        NotificationManagerCompat.from(context).notify(System.currentTimeMillis().toInt(), notification)
+        // Notification id = pending expense id, so each candidate gets its own notification
+        // (never collapses into another) and its PendingIntent can't be reused for the wrong one.
+        NotificationManagerCompat.from(context).notify(pendingExpenseId.toInt(), notification)
     }
 
-    private fun buildReviewPendingIntent(context: Context): PendingIntent {
+    private fun buildReviewPendingIntent(context: Context, pendingExpenseId: Long): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra(MainActivity.EXTRA_OPEN_REVIEW, true)
+            putExtra(MainActivity.EXTRA_PENDING_EXPENSE_ID, pendingExpenseId)
         }
         return PendingIntent.getActivity(
             context,
-            0,
+            pendingExpenseId.toInt(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )

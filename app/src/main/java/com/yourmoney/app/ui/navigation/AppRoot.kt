@@ -31,10 +31,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.yourmoney.app.ui.addexpense.AddExpenseSheet
 import com.yourmoney.app.ui.categories.CategoryManagementScreen
 import com.yourmoney.app.ui.dashboard.DashboardScreen
@@ -49,30 +51,37 @@ private sealed class Destination(val route: String, val label: String, val icon:
     data object Dashboard : Destination("dashboard", "Home", Icons.Filled.Home)
     data object History : Destination("history", "History", Icons.Filled.List)
     data object Stats : Destination("stats", "Stats", Icons.Filled.BarChart)
-    data object Review : Destination("review", "Review", Icons.Filled.FactCheck)
+    data object Review : Destination(REVIEW_BASE_ROUTE, "Review", Icons.Filled.FactCheck)
     data object Settings : Destination("settings", "Settings", Icons.Filled.Settings)
 }
 
 private const val CATEGORIES_ROUTE = "categories"
+private const val REVIEW_BASE_ROUTE = "review"
+private const val REVIEW_FOCUS_ARG = "focusId"
+private const val REVIEW_ROUTE_PATTERN = "$REVIEW_BASE_ROUTE?$REVIEW_FOCUS_ARG={$REVIEW_FOCUS_ARG}"
+
+private fun reviewRoute(focusId: Long? = null): String =
+    if (focusId == null) REVIEW_BASE_ROUTE else "$REVIEW_BASE_ROUTE?$REVIEW_FOCUS_ARG=$focusId"
 
 private val destinations =
     listOf(Destination.Dashboard, Destination.History, Destination.Stats, Destination.Review, Destination.Settings)
 
 @Composable
-fun AppRoot(navigateToReviewSignal: MutableState<Boolean> = remember { mutableStateOf(false) }) {
+fun AppRoot(reviewFocusId: MutableState<Long?> = remember { mutableStateOf(null) }) {
     val navController = rememberNavController()
     var showAddExpense by rememberSaveable { mutableStateOf(false) }
     val app = yourMoneyApp()
     val pendingCount by app.pendingExpenseRepository.observePendingCount().collectAsState(initial = 0)
 
-    LaunchedEffect(navigateToReviewSignal.value) {
-        if (navigateToReviewSignal.value) {
-            navController.navigate(Destination.Review.route) {
+    LaunchedEffect(reviewFocusId.value) {
+        val focusId = reviewFocusId.value
+        if (focusId != null) {
+            navController.navigate(reviewRoute(focusId)) {
                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                 launchSingleTop = true
                 restoreState = true
             }
-            navigateToReviewSignal.value = false
+            reviewFocusId.value = null
         }
     }
 
@@ -86,7 +95,8 @@ fun AppRoot(navigateToReviewSignal: MutableState<Boolean> = remember { mutableSt
         bottomBar = {
             NavigationBar(containerColor = Color.White) {
                 destinations.forEach { destination ->
-                    val selected = currentDestination?.hierarchy?.any { it.route == destination.route } == true
+                    val matchRoute = if (destination is Destination.Review) REVIEW_ROUTE_PATTERN else destination.route
+                    val selected = currentDestination?.hierarchy?.any { it.route == matchRoute } == true
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
@@ -135,7 +145,7 @@ fun AppRoot(navigateToReviewSignal: MutableState<Boolean> = remember { mutableSt
             composable(Destination.Dashboard.route) {
                 DashboardScreen(
                     onNavigateToReview = {
-                        navController.navigate(Destination.Review.route) {
+                        navController.navigate(reviewRoute()) {
                             launchSingleTop = true
                         }
                     },
@@ -143,7 +153,13 @@ fun AppRoot(navigateToReviewSignal: MutableState<Boolean> = remember { mutableSt
             }
             composable(Destination.History.route) { HistoryScreen() }
             composable(Destination.Stats.route) { StatsScreen() }
-            composable(Destination.Review.route) { ReviewScreen() }
+            composable(
+                route = REVIEW_ROUTE_PATTERN,
+                arguments = listOf(navArgument(REVIEW_FOCUS_ARG) { type = NavType.LongType; defaultValue = -1L }),
+            ) { backStackEntry ->
+                val focusId = backStackEntry.arguments?.getLong(REVIEW_FOCUS_ARG)?.takeIf { it >= 0 }
+                ReviewScreen(focusExpenseId = focusId)
+            }
             composable(Destination.Settings.route) {
                 SettingsScreen(
                     onManageCategories = {

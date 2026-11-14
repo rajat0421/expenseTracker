@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.border
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,6 +45,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,7 +77,7 @@ import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun ReviewScreen() {
+fun ReviewScreen(focusExpenseId: Long? = null) {
     val viewModel: ReviewViewModel =
         rememberFactoryViewModel { app -> ReviewViewModel(app.pendingExpenseRepository, app.categoryRepository) }
     val pending by viewModel.pending.collectAsState()
@@ -84,8 +87,18 @@ fun ReviewScreen() {
     val sortOption by viewModel.sortOption.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
 
     var editingCandidate by remember { mutableStateOf<PendingExpense?>(null) }
+
+    LaunchedEffect(focusExpenseId, pending) {
+        if (focusExpenseId != null) {
+            val index = pending.indexOfFirst { it.id == focusExpenseId }
+            if (index >= 0) {
+                listState.animateScrollToItem(index)
+            }
+        }
+    }
 
     fun notify(message: String) {
         scope.launch { snackbarHostState.showSnackbar(message) }
@@ -159,6 +172,7 @@ fun ReviewScreen() {
                 }
             } else {
                 LazyColumn(
+                    state = listState,
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
@@ -167,6 +181,7 @@ fun ReviewScreen() {
                             candidate = candidate,
                             category = categoriesById[candidate.categoryId],
                             categories = categories,
+                            highlighted = candidate.id == focusExpenseId,
                             selected = candidate.id in selectedIds,
                             onToggleSelected = { viewModel.toggleSelected(candidate.id) },
                             onCategoryChange = { newCategoryId ->
@@ -299,6 +314,7 @@ private fun PendingExpenseCard(
     candidate: PendingExpense,
     category: CategoryEntity?,
     categories: List<CategoryEntity>,
+    highlighted: Boolean = false,
     selected: Boolean,
     onToggleSelected: () -> Unit,
     onCategoryChange: (Long) -> Unit,
@@ -306,13 +322,21 @@ private fun PendingExpenseCard(
     onReject: () -> Unit,
     onEditClick: () -> Unit,
 ) {
-    var smsExpanded by remember { mutableStateOf(false) }
+    var smsExpanded by remember(candidate.id) { mutableStateOf(highlighted) }
     var categoryMenuExpanded by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = if (highlighted) {
+            Modifier
+                .fillMaxWidth()
+                .border(width = 2.dp, color = DeepGreen, shape = RoundedCornerShape(18.dp))
+        } else {
+            Modifier.fillMaxWidth()
+        },
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(
+            containerColor = if (highlighted) SoftGreen else MaterialTheme.colorScheme.surface,
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
